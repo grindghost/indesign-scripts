@@ -357,17 +357,21 @@
           ],
           name: metaObj.formation_id + "_" + (total + 1)
         });
+        field.multiline = true;
         // Assign unique label to textbox
         var txtbId = 'txtb_' + metaObj.formation_id + '_' + (total + 1);
         field.label = txtbId;
         field.description = "Entrez votre réponse ici...";
         field.appliedFont = "Arial";
         field.fontSize = 10;
+        field.multiline = true;
+        // Set content based on whether it's the last unit overall
+        var isLast = (total + 1 === allUnits.length);
         try {
           var tf = field.textFrames[0];
           tf.parentStory.texts[0].appliedFont = app.fonts.item("Arial\tRegular");
           tf.parentStory.texts[0].pointSize = 10;
-          tf.contents = " ";
+          tf.contents = isLast ? "Entrez vos notes ici..." : "Entrez votre réponse ici...";
         } catch (e) {}
         // Save unit info in metadata
         metaObj.units[unitId] = {
