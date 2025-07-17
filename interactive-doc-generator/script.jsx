@@ -130,6 +130,20 @@
           if (txtb) txtb.remove();
         } catch (e) {}
       }
+      // Remove nbm
+      if (unit.nbmId) {
+        try {
+          var nbm = findPageItemByLabel(unit.nbmId);
+          if (nbm) nbm.remove();
+        } catch (e) {}
+      }
+      // Remove corner
+      if (unit.cornerId) {
+        try {
+          var corner = findPageItemByLabel(unit.cornerId);
+          if (corner) corner.remove();
+        } catch (e) {}
+      }
     }
     delete metaObj.units;
     writeMetadata(metaObj);
@@ -161,6 +175,18 @@
           txtb.name = newId + '_' + unit.index;
         }
         unit.texBoxId = 'txtb_' + newId + '_' + unit.index;
+      }
+      // Update nbm label
+      if (unit.nbmId) {
+        var nbm = findPageItemByLabel(unit.nbmId);
+        if (nbm) nbm.label = 'nbm_' + newId + '_' + unit.index;
+        unit.nbmId = 'nbm_' + newId + '_' + unit.index;
+      }
+      // Update corner label
+      if (unit.cornerId) {
+        var corner = findPageItemByLabel(unit.cornerId);
+        if (corner) corner.label = 'corner_' + newId + '_' + unit.index;
+        unit.cornerId = 'corner_' + newId + '_' + unit.index;
       }
     }
     metaObj.formation_id = newId;
@@ -243,6 +269,7 @@
         var unitId = 'unit_' + generateRandomString(8);
         unit.frame.label = unitId;
         // Clone nmb
+        var nbmId = null;
         if (!nmbPrototype) {
           for (var np = 0; np < doc.allPageItems.length; np++) {
             if (doc.allPageItems[np].label === "nmb") {
@@ -251,8 +278,9 @@
             }
           }
         }
+        var nmb = null;
         if (nmbPrototype) {
-          var nmb = nmbPrototype.duplicate(page);
+          nmb = nmbPrototype.duplicate(page);
           nmb.bringToFront();
           var unitBounds = newBounds;
           var nmbBounds = nmb.geometricBounds;
@@ -267,10 +295,12 @@
           for (var g = 0; g < groupItems.length; g++) {
             if (groupItems[g] instanceof TextFrame) {
               if (g === 0) {
-                groupItems[g].contents = String(i + 1);
+                groupItems[g].contents = String(total + 1);
               }
             }
           }
+          nbmId = 'nbm_' + metaObj.formation_id + '_' + (total + 1);
+          nmb.label = nbmId;
         }
         // Position blue rectangle
         var redTop = newBounds[2] + SPACING_BELOW_UNIT;
@@ -292,6 +322,7 @@
         var rectId = 'rect_' + metaObj.formation_id + '_' + (total + 1);
         rect.label = rectId;
         // Clone corner
+        var cornerId = null;
         if (!cornerPrototype) {
           for (var p = 0; p < doc.allPageItems.length; p++) {
             if (doc.allPageItems[p].label === "corner") {
@@ -300,8 +331,9 @@
             }
           }
         }
+        var corner = null;
         if (cornerPrototype) {
-          var corner = cornerPrototype.duplicate(page);
+          corner = cornerPrototype.duplicate(page);
           var rectBounds = rect.geometricBounds;
           var cornerBounds = corner.geometricBounds;
           var cornerHeight = cornerBounds[2] - cornerBounds[0];
@@ -312,6 +344,8 @@
           var newRight = rectBounds[3];
           corner.geometricBounds = [newTop, newLeft, newBottom, newRight];
           corner.bringToFront();
+          cornerId = 'corner_' + metaObj.formation_id + '_' + (total + 1);
+          corner.label = cornerId;
         }
         // Add styled textbox
         var field = page.textBoxes.add({
@@ -345,7 +379,9 @@
             textbox: field.geometricBounds.slice(0)
           },
           rectangleId: rectId,
-          texBoxId: txtbId
+          texBoxId: txtbId,
+          nbmId: nbmId,
+          cornerId: cornerId
         };
         total++;
         currentY = redBottom + SPACING_BELOW_UNIT;
