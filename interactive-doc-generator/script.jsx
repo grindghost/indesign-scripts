@@ -363,6 +363,8 @@
         var field = null;
         if (textFieldPrototype) {
           field = textFieldPrototype.duplicate(page);
+          field.bringToFront();
+
           field.geometricBounds = [
             redTop + FIELD_PADDING,
             left + FIELD_PADDING,
@@ -371,6 +373,10 @@
           ];
           field.name = metaObj.formation_id + "_" + (total + 1);
           field.multiline = true;
+          // Assign font and size to textbox
+          field.fontSize = 10;
+          field.appliedFont = "Arial";
+
           // Assign unique label to textbox
           txtbId = 'txtb_' + metaObj.formation_id + '_' + (total + 1);
           field.label = txtbId;
@@ -379,8 +385,6 @@
           var isLast = (total + 1 === allUnits.length);
           try {
             var tf = field.textFrames ? field.textFrames[0] : field;
-            tf.parentStory.texts[0].appliedFont = app.fonts.item("Arial\tRegular");
-            tf.parentStory.texts[0].pointSize = 10;
             tf.contents = isLast ? "Entrez vos notes ici..." : "Entrez votre réponse ici...";
           } catch (e) {}
         }
@@ -455,17 +459,17 @@
     SESSION_ID = trimmedInput;
     metadata.formation_id = SESSION_ID;
     var page1 = doc.pages[0];
-    var pasteboardBounds = page1.bounds;
+    var page1Bounds = page1.bounds;
     var tf = doc.textFrames.add(metadataLayer);
     tf.contents = stringifyJSON(metadata);
     tf.label = SESSION_ID_LABEL;
     var width = 40; // Increased width
     var height = 100; // Increased height
     tf.geometricBounds = [
-      pasteboardBounds[0],
-      pasteboardBounds[1] - width - 10,
-      pasteboardBounds[0] + height,
-      pasteboardBounds[1] - 10
+      page1Bounds[0] + 10, // Top of page 1 + small margin
+      page1Bounds[1] - width - 20, // Left of page 1, outside on the left (pasteboard)
+      page1Bounds[0], // Top of page 1
+      page1Bounds[1] - 20 // Left of page 1, small offset into pasteboard
     ];
     // Enable hyphenation and allow text to auto-size vertically
     try {
@@ -475,4 +479,5 @@
     metaFrame = tf;
     processUnits(metadata);
   }
+  
 })();
