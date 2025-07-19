@@ -27,7 +27,11 @@
   var SESSION_ID = null;
   var METADATA_LAYER_NAME = "_metadatas";
 
+  // 🔍 Prototypes
   var metadataLayer = null;
+  var textFieldPrototype = null;
+  var metaFrame = null;
+
   try {
     metadataLayer = doc.layers.itemByName(METADATA_LAYER_NAME);
     metadataLayer.name;
@@ -35,7 +39,6 @@
     metadataLayer = doc.layers.add({ name: METADATA_LAYER_NAME });
   }
 
-  var metaFrame = null;
   var metadata = {};
 
   // === 🧠 Robust JSON helper (for ExtendScript, supports nested objects/arrays) ===
@@ -347,32 +350,40 @@
           cornerId = 'corner_' + metaObj.formation_id + '_' + (total + 1);
           corner.label = cornerId;
         }
-        // Add styled textbox
-        var field = page.textBoxes.add({
-          geometricBounds: [
+        // Clone textField
+        var txtbId = null;
+        if (!textFieldPrototype) {
+          for (var tfp = 0; tfp < doc.allPageItems.length; tfp++) {
+            if (doc.allPageItems[tfp].label === "textField") {
+              textFieldPrototype = doc.allPageItems[tfp];
+              break;
+            }
+          }
+        }
+        var field = null;
+        if (textFieldPrototype) {
+          field = textFieldPrototype.duplicate(page);
+          field.geometricBounds = [
             redTop + FIELD_PADDING,
             left + FIELD_PADDING,
             redBottom - FIELD_PADDING,
             right - FIELD_PADDING
-          ],
-          name: metaObj.formation_id + "_" + (total + 1)
-        });
-        field.multiline = true;
-        // Assign unique label to textbox
-        var txtbId = 'txtb_' + metaObj.formation_id + '_' + (total + 1);
-        field.label = txtbId;
-        field.description = "Entrez votre réponse ici...";
-        field.appliedFont = "Arial";
-        field.fontSize = 10;
-        field.multiline = true;
-        // Set content based on whether it's the last unit overall
-        var isLast = (total + 1 === allUnits.length);
-        try {
-          var tf = field.textFrames[0];
-          tf.parentStory.texts[0].appliedFont = app.fonts.item("Arial\tRegular");
-          tf.parentStory.texts[0].pointSize = 10;
-          tf.contents = isLast ? "Entrez vos notes ici..." : "Entrez votre réponse ici...";
-        } catch (e) {}
+          ];
+          field.name = metaObj.formation_id + "_" + (total + 1);
+          field.multiline = true;
+          // Assign unique label to textbox
+          txtbId = 'txtb_' + metaObj.formation_id + '_' + (total + 1);
+          field.label = txtbId;
+          field.description = "Entrez votre réponse ici...";
+          // Set content based on whether it's the last unit overall
+          var isLast = (total + 1 === allUnits.length);
+          try {
+            var tf = field.textFrames ? field.textFrames[0] : field;
+            tf.parentStory.texts[0].appliedFont = app.fonts.item("Arial\tRegular");
+            tf.parentStory.texts[0].pointSize = 10;
+            tf.contents = isLast ? "Entrez vos notes ici..." : "Entrez votre réponse ici...";
+          } catch (e) {}
+        }
         // Save unit info in metadata
         metaObj.units[unitId] = {
           index: total + 1,
@@ -380,7 +391,7 @@
           position: {
             textframe: newBounds.slice(0),
             rectangle: rect.geometricBounds.slice(0),
-            textbox: field.geometricBounds.slice(0)
+            textbox: field ? field.geometricBounds.slice(0) : null
           },
           rectangleId: rectId,
           texBoxId: txtbId,
